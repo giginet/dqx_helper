@@ -17,7 +17,7 @@ class Product(object):
         self.item_id = item_id
         self.name = name
         self.quantity = quantity
-        self.price = price / self.quantity
+        self.price = float(price) / float(self.quantity)
         self.place = place
         self.total = self.price * self.quantity
 
@@ -74,7 +74,7 @@ class BazaarBot(object):
         href = dict(items[0].attrs)['href']
         item_id = href.split('/')[-2]
         for page in itertools.count():
-            print "Searchng... page %d" % page
+            print "page %d fetching..." % page
             r = self.br.open(self.BAZAAR_PAGE % (self.BASE_URL, item_id, page))
             soup = BeautifulSoup(r.read())
             columns = soup.findAll('tr', 'bazaarTableTd')
@@ -94,12 +94,13 @@ SETTING_FILE = 'setting.yaml'
 if __name__ == '__main__':
     setting = yaml.load(open(SETTING_FILE).read())
     if len(sys.argv) == 2:
+        q = sys.argv[1].decode(sys.getfilesystemencoding())
+        print u"%sの検索結果" % q
         b = BazaarBot(setting['sqex_id'], setting['passwd'])
         products = b.search_item(sys.argv[1])
-        print "%sの検索結果" % sys.argv[1]
         for product in products[:10]:
             print u"%dG %d個 総額%dG @%s" % (product.price, product.quantity, product.total, product.place)
-        print "%d品中" % len(products)
+        print u"%d品中" % len(products)
     else:
         print "%s must be called as %s <itemname>" % (sys.argv[0], sys.argv[0])
     
