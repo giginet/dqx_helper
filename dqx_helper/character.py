@@ -97,7 +97,7 @@ class Character(object):
         return self.CHARACTER_URL % (dqx_helper.BASE_URL, self.cid)
 
     def _get_soup(self, url):
-        if self.is_mychara():
+        if self.is_auth():
             r = self.auth.browser.open(url)
             return BeautifulSoup(r.read())
         else:

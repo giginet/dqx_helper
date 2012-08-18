@@ -26,7 +26,7 @@ class Photo(object):
         img = Image.open(cStringIO.StringIO(r.read()))
         if os.path.isdir(path):
             img.save(os.path.join(path, self.filename))
-            print "save %s" % self.filename
+            print "saving %s" % self.filename
         else:
             print "%s is not found." % path
 
