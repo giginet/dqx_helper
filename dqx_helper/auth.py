@@ -8,10 +8,9 @@ import cookielib
 import mechanize
 from BeautifulSoup import BeautifulSoup
 import dqx_helper
+from character import Character
 
-class AuthException(Exception):
-    def __str__(self):
-        return "Exception raised for errors in authenticate to DQX portal."
+class AuthException(Exception): pass
 
 class Auth(object):
     LOGIN_PAGE = r'%s/sc/login' % dqx_helper.BASE_URL
@@ -45,8 +44,13 @@ class Auth(object):
         soup = BeautifulSoup(r)
         rel = dict(soup.findAll('a', {'class':re.compile('charselect')})[0].attrs)['rel']
         if not rel:
-            raise AuthException()
+            raise AuthException("Exception raised for errors in authenticate to DQX portal.")
         browser.select_form(name='loginActionForm')
         for f in browser.form.controls: f.readonly = False
-        browser.form['cid'] = rel
+        self.cid = int(rel)
+        browser.form['cid'] = str(self.cid)
         browser.submit()
+
+    @property
+    def character(self):
+        return Character(self.cid, self)
