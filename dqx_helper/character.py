@@ -48,7 +48,7 @@ class Character(object):
         equip_index = 1 if self.is_mychara() else 0 # マイキャラと他のキャラでは挙動が違う
         self.equipments = dict([(key.contents[0].string, None if value.contents[equip_index].string.strip() == u"そうびなし" else value.contents[equip_index].string.strip()) for key, value in zip(equipment_table.findAll('th'), equipment_table.findAll('td'))])
         slist = map(lambda tag: tag.string.replace(u'：', '').replace(u'&nbsp;', ''), soup.find('div', id='myCharacterStatusList').findAll('dd'))
-        self.character_id, self.brood, self.sex, self.job, self.level = slist[:5]
+        self.character_id, self.species, self.sex, self.job, self.level = slist[:5]
         self.level = int(self.level)
         self.charge = None
         if self.is_mychara():
