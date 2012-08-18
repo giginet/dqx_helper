@@ -10,6 +10,7 @@ from BeautifulSoup import BeautifulSoup
 import dqx_helper
 
 class PermissionException(Exception): pass
+class NotFoundException(Exception): pass
 
 class Character(object):
     CID_PATTERN = r'(?P<cid>[0-9]+)'
@@ -31,10 +32,12 @@ class Character(object):
     def fetch(self, url):
         # fetch from home
         soup = self._get_soup(self.url)
-        name = soup.find(id='myCharacterName').string
-        match = re.match(r'\[(?P<name>.+)\]', name)
-        if not match:
-            raise PermissionException("cid = %d is not found or private. " % self.cid)
+        name = soup.find(id='myCharacterName')
+        if not name:
+            if soup.findAll('div', {'class':re.compile('imgUnkchara')}):
+                raise NotFoundException('cid = %d is not found.' % self.cid)
+            raise PermissionException("cid = %d is not public." % self.cid)
+        match = re.match(r'\[(?P<name>.+)\]', name.string)
         self.name = match.group('name')
         self.message = ''.join([tag.string for tag in soup.find('div', {'class':'message'}).find('p') if not tag.string is None])
         self.location = map(lambda dt: dt.string, soup.find('div', {'class':'where'}).findAll('dd'))
