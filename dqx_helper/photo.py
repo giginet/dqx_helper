@@ -4,26 +4,31 @@
 # created by giginet on 2012/08/19
 #
 import os
-import re
-import urllib2
 import cStringIO
 from dateutil.parser import parser
 from PIL import Image
 
 class Photo(object):
-    def __init__(self, url, author, **kwargs):
-        self.url = url
+
+    PHOTO_URL = r'http://img.dqx.jp/smpicture/download/webpicture/%d/original/%d/'
+
+    def __init__(self, photo_id, author, **kwargs):
+        self.photo_id = photo_id
         self.author = author
         self.place = kwargs.get('place', '')
         self.created_at = parser(kwargs.get('created_at'))
         self.comment = kwargs.get('comment')
-        self.photo_id = re.compile(r'[0-9]+').search(self.url).groups()[-1]
+        self.url = self.PHOTO_URL % (self.author.cid, self.photo_id)
 
     def save(self, path=os.getcwd()):
-        dirname = os.path.dirname(path)
-        data = urllib2.openurl(self.url).read()
-        img = Image.open(cStringIO.cStringIO(data))
-        img.save(os.path.join(dirname, self.filename))
+        if not self.author.is_auth: return
+        r = self.author.auth.browser.open(self.url)
+        img = Image.open(cStringIO.StringIO(r.read()))
+        if os.path.isdir(path):
+            img.save(os.path.join(path, self.filename))
+            print "save %s" % self.filename
+        else:
+            print "%s is not found." % path
 
     @property
     def filename(self):

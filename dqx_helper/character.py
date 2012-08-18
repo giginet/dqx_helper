@@ -6,17 +6,20 @@
 
 import re
 import urllib2
+import itertools
 from BeautifulSoup import BeautifulSoup
 import dqx_helper
+from dqx_helper.photo import Photo
 
 class PermissionException(Exception): pass
 class NotFoundException(Exception): pass
 
 class Character(object):
     CID_PATTERN = r'(?P<cid>[0-9]+)'
-    CHARACTER_URL = '%s/sc/character/%d/'
-    CHARACTER_STATUS_URL = '%s/sc/character/%d/status/'
-    HOME_STATUS_URL = '%s/sc/home/status/'
+    CHARACTER_URL = r'%s/sc/character/%d/'
+    CHARACTER_STATUS_URL = r'%s/sc/character/%d/status/'
+    HOME_STATUS_URL = r'%s/sc/home/status/'
+    PHOTO_INDEX_URL = r'%s/sc/character/%d/picture/page/%d'
     
     def __init__(self, cid, auth=None):
         match = re.search(self.CID_PATTERN, str(cid))
@@ -65,6 +68,24 @@ class Character(object):
         self.spells = [td.contents[0].string.strip() for td in spell_table.findAll('td')]
         if self.spells[0] == '---': self.spells = []
 
+    def get_photos(self):
+        if not self.is_auth():
+            raise PermissionException("you cannot execute get_photo without logged in.")
+        photos = []
+        for page in itertools.count():
+            print "Fetching page %d..." % page
+            soup = self._get_soup(self.PHOTO_INDEX_URL % (dqx_helper.BASE_URL, self.cid, page))
+            table = soup.findAll('td', {'class' : 'contentsTable1TD1'})
+            if len(table) is 0: break
+            for photo in table:
+                info = dict(photo.find('a', {'class' : 'showLargePict'}).attrs)
+                comment = info.get('title', '')
+                date, place = photo.find('p', {'class' : 'thumbLocationAndDate'}).contents[::2]
+                photo_id = int(re.compile(r'[0-9]+').findall(info['rel'])[-1])
+                p = Photo(photo_id, self, comment=comment, created_at=date, place=place)
+                photos.append(p)
+        return photos
+
     @property
     def status_url(self):
         if self.is_mychara():
@@ -84,4 +105,7 @@ class Character(object):
             return BeautifulSoup(page)
 
     def is_mychara(self):
-        return self.auth and self.auth.cid == self.cid
+        return self.is_auth() and self.auth.cid == self.cid
+
+    def is_auth(self):
+        return not self.auth is None

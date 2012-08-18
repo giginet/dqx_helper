@@ -3,7 +3,10 @@
 # auth.py
 # created by giginet on 2012/08/18
 #
+
 import re
+import sys
+from getpass import getpass
 import cookielib
 import mechanize
 from BeautifulSoup import BeautifulSoup
@@ -17,7 +20,7 @@ class Auth(object):
     SEARCH_PAGE = r'%s/sc/search' % dqx_helper.BASE_URL
     BAZAAR_PAGE = r'%s/sc/search/bazaar/%s/page/%d'
 
-    def __init__(self, username='', passwd=''):
+    def __init__(self, username=None, passwd=None):
         self.browser = mechanize.Browser()
         cj = cookielib.LWPCookieJar()
         self.browser.set_cookiejar(cj)
@@ -25,6 +28,10 @@ class Auth(object):
         self.browser.set_handle_redirect(True)
         self.browser.set_handle_referer(True)
         self.browser.set_handle_robots(False)
+        if not username or not passwd:
+            sys.stdout.write('Username: ')
+            username = raw_input()
+            passwd = getpass()
         self.login(username, passwd)
         
     def login(self, username, passwd):
