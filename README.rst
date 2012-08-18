@@ -7,7 +7,7 @@
 
 使い方
 ------------------------
-1. sh setup.shを走らせる
+1. sh util/setup.shを走らせる
 2. setting.yaml.sampleをsetting.yamlにリネームして、スクウェア・エニックスのID、パスワードを記述する
 3. python bazaar.py アイテム名といった感じで起動する
 
