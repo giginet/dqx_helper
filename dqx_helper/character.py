@@ -65,7 +65,8 @@ class Character(object):
         effect_table = soup.find('div', {'class':'skillEffect'})
         self.skill_effects = dict([(tr.find('th').contents[0].string, map(lambda tag: tag, tr.find('td').contents[1::2])) for tr in effect_table.findAll('tr')])
         spell_table = soup.find('div', {'class':'spell'})
-        self.spells = [td.contents[0].string.strip() for td in spell_table.findAll('td')]
+        spell_index = 1 if self.is_auth() else 0
+        self.spells = [td.contents[spell_index].string.strip() for td in spell_table.findAll('td')]
         if self.spells[0] == '---': self.spells = []
 
     def get_photos(self):

@@ -46,7 +46,10 @@ class Auth(object):
         r = browser.submit()
         
         browser.select_form(name='mainForm')
-        r = browser.submit()
+        try:
+            r = browser.submit()
+        except:
+            raise AuthException('Username or Password may be invalid.')
         r = browser.open(self.SEARCH_PAGE)
         soup = BeautifulSoup(r)
         rel = dict(soup.findAll('a', {'class':re.compile('charselect')})[0].attrs)['rel']
