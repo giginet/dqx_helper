@@ -30,9 +30,9 @@ class Character(object):
         else:
             raise TypeError("""'cid' must be URL of character page or character id.""")
         self.auth = auth
-        self.fetch(cid)
+        self.fetch()
 
-    def fetch(self, url):
+    def fetch(self):
         # fetch from home
         soup = self._get_soup(self.url)
         name = soup.find(id='myCharacterName')
@@ -61,7 +61,7 @@ class Character(object):
             support = soup.find('div', {'class' : 'support'})
             self.support_info['comment'] = support_comment.contents[0].string.strip()
             if self.is_mychara():
-                self.support_info['gold'], self.support_info['exp'], self.support_info['honor'] = map(lambda dd: int(re.compile('^[0-9]+').match(dd.contents[0].string).group(0)), support.find('dl', {'class' : 'value'}).findAll('dd'))
+                self.support_info['exp'], self.support_info['gold'], self.support_info['honor'] = map(lambda dd: int(re.compile('^[0-9]+').match(dd.contents[0].string).group(0)), support.find('dl', {'class' : 'value'}).findAll('dd'))
 
         # fetch from status
         soup = self._get_soup(self.status_url)

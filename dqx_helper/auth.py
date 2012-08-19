@@ -33,6 +33,7 @@ class Auth(object):
             username = raw_input()
             passwd = getpass()
         self.login(username, passwd)
+        self._character = None
         
     def login(self, username, passwd):
         browser = self.browser 
@@ -63,4 +64,6 @@ class Auth(object):
 
     @property
     def character(self):
-        return Character(self.cid, self)
+        if not self._character:
+            self._character = Character(self.cid, self)
+        return self._character
