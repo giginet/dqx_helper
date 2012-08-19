@@ -54,6 +54,15 @@ class Character(object):
         if self.is_mychara():
             self.charge = int(slist[5].replace(u'時間', ''))
 
+        support_comment = soup.find(id="welcomeFriend").find('dd')
+        self.is_support = support_comment is not None
+        self.support_info = {}
+        if self.is_support:
+            support = soup.find('div', {'class' : 'support'})
+            self.support_info['comment'] = support_comment.contents[0].string.strip()
+            if self.is_mychara():
+                self.support_info['gold'], self.support_info['exp'], self.support_info['honor'] = map(lambda dd: int(re.compile('^[0-9]+').match(dd.contents[0].string).group(0)), support.find('dl', {'class' : 'value'}).findAll('dd'))
+
         # fetch from status
         soup = self._get_soup(self.status_url)
         parameter_table = soup.find('div', {'class':'parameter'})
@@ -65,9 +74,12 @@ class Character(object):
         effect_table = soup.find('div', {'class':'skillEffect'})
         self.skill_effects = dict([(tr.find('th').contents[0].string, map(lambda tag: tag, tr.find('td').contents[1::2])) for tr in effect_table.findAll('tr')])
         spell_table = soup.find('div', {'class':'spell'})
-        spell_index = 1 if self.is_auth() else 0
-        self.spells = [td.contents[spell_index].string.strip() for td in spell_table.findAll('td')]
-        if self.spells[0] == '---': self.spells = []
+        tds = spell_table.findAll('td')
+        if tds[0].contents[0].string.strip() == '---':
+            self.spells = []
+        else:
+            spell_index = 1 if self.is_auth() else 0
+            self.spells = [td.contents[spell_index].string.strip() for td in spell_table.findAll('td')]
 
     def get_photos(self):
         if not self.is_auth():
