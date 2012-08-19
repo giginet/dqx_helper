@@ -8,6 +8,8 @@ import re
 import urllib2
 import datetime
 import itertools
+import cStringIO
+from PIL import Image
 from BeautifulSoup import BeautifulSoup
 import dqx_helper
 from dqx_helper.photo import Photo
@@ -22,6 +24,7 @@ class Character(object):
     HOME_STATUS_URL = r'%s/sc/home/status/'
     PHOTO_INDEX_URL = r'%s/sc/character/%d/picture/page/%d'
     FRIEND_INDEX_URL = r'%s/sc/character/%d/friendlist/page/%d'
+    FACEICON_URL = r'%s/dq_resource/faceicon2/%s/%s/%s/%s/%d.png'
     
     def __init__(self, cid, auth=None, name=None, fetch=True):
         match = re.search(self.CID_PATTERN, str(cid))
@@ -137,7 +140,11 @@ class Character(object):
 
     @property
     def friends(self):
-        if self._friends: return self._friends
+        if self._friends is None:
+            self._friends = self.get_friends()
+        return self._friends
+
+    def get_friends(self):
         # fetch from friendlist
         self._friends = []
         if self.is_auth():
@@ -161,3 +168,8 @@ class Character(object):
             self.friends.reverse()
         return self._friends
 
+    def get_faceicon(self):
+        l = len(str(self.cid))
+        url = self.FACEICON_URL % (dqx_helper.BASE_URL, str(self.cid)[:l - 9], str(self.cid)[:l - 8], str(self.cid)[:l - 7], str(self.cid)[:l - 6], self.cid)
+        page = urllib2.urlopen(url)
+        return Image.open(cStringIO.StringIO(page.read()))
