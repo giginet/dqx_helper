@@ -48,8 +48,16 @@ class Bazaar(object):
                 quantity = column.find('td', {'class':'col12Td'}).string
                 price = column.find('td', {'class':'col14Td'}).contents[0]
                 place = column.find('td', {'class':'col16Td'}).string
+                rank_row = column.find('td', {'class':'col13Td'})
+                font = rank_row.find('font')
+                if font:
+                    # fontタグがあるとき、ランク0 ~ 2
+                    rank = 3 - len(font.string)
+                else:
+                    # fontタグがないとき、ランクなしかランク3
+                    rank = None if rank_row.contents[0].string == '---' else 3
                 quantity = re.match(r'^[0-9]+', quantity).group(0)
                 price = re.match(r'^[0-9]+', price).group(0)
-                product = Product(name=q, item_id=item_id, price=int(price), quantity=int(quantity), place=place)
+                product = Product(name=q, item_id=item_id, price=int(price), quantity=int(quantity), place=place, rank=rank)
                 products.append(product)
         return sorted(products, key=lambda product: product.price)

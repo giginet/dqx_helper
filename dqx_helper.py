@@ -20,7 +20,7 @@ if __name__ == '__main__':
         args = []
         if len(sys.argv) > 2:
             args = sys.argv[2:]
-        if command == 'bazzar':
+        if command == 'bazaar':
             product = args[0]
             q = product.decode(sys.getfilesystemencoding())
             print u"%sの検索結果" % q
