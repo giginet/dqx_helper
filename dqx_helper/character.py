@@ -6,6 +6,7 @@
 
 import re
 import urllib2
+import datetime
 import itertools
 from BeautifulSoup import BeautifulSoup
 import dqx_helper
@@ -20,8 +21,9 @@ class Character(object):
     CHARACTER_STATUS_URL = r'%s/sc/character/%d/status/'
     HOME_STATUS_URL = r'%s/sc/home/status/'
     PHOTO_INDEX_URL = r'%s/sc/character/%d/picture/page/%d'
+    FRIEND_INDEX_URL = r'%s/sc/character/%d/friendlist/page/%d'
     
-    def __init__(self, cid, auth=None):
+    def __init__(self, cid, auth=None, name=None, fetch=True):
         match = re.search(self.CID_PATTERN, str(cid))
         if (match and match.group('cid')):
             self.cid = int(match.group('cid'))
@@ -30,7 +32,14 @@ class Character(object):
         else:
             raise TypeError("""'cid' must be URL of character page or character id.""")
         self.auth = auth
-        self.fetch()
+        if name:
+            self.name = name
+        self._friends = None
+        self.updated_at = None
+        if fetch: self.fetch()
+
+    def __unicode__(self):
+        return self.name
 
     def fetch(self):
         # fetch from home
@@ -39,7 +48,9 @@ class Character(object):
         if not name:
             if soup.findAll('div', {'class':re.compile('imgUnkchara')}):
                 raise NotFoundException('cid = %d is not found.' % self.cid)
+            self.is_public = False
             raise PermissionException("cid = %d is not public." % self.cid)
+        self.is_public = True
         match = re.match(r'\[(?P<name>.+)\]', name.string)
         self.name = match.group('name')
         self.message = ''.join([tag.string for tag in soup.find('div', {'class':'message'}).find('p') if not tag.string is None])
@@ -80,6 +91,7 @@ class Character(object):
         else:
             spell_index = 1 if self.is_auth() else 0
             self.spells = [td.contents[spell_index].string.strip() for td in spell_table.findAll('td')]
+        self.updated_at = datetime.datetime.today()
 
     def get_photos(self):
         if not self.is_auth():
@@ -122,3 +134,30 @@ class Character(object):
 
     def is_auth(self):
         return not self.auth is None
+
+    @property
+    def friends(self):
+        if self._friends: return self._friends
+        # fetch from friendlist
+        self._friends = []
+        if self.is_auth():
+            for page in itertools.count():
+                soup = self._get_soup(self.FRIEND_INDEX_URL % (dqx_helper.BASE_URL, self.cid, page))
+                friend_tables = soup.findAll('tr', {'class' : 'friendlistTableTd'})
+                if len(friend_tables) == 0: break
+                for tr in friend_tables:
+                    link = tr.findAll('td')[0].find('a')
+                    cid = re.compile('[0-9]+').search(dict(link.attrs)['href']).group(0)
+                    name = link.string
+                    try:
+                        friend = Character(cid, self.auth, name)
+                        self._friends.append(friend)
+                    except PermissionException:
+                        print "%s is not public." % name
+                        friend = Character(cid, self.auth, name, fetch=False)
+                        self._friends.append(friend)
+                    except NotFoundException:
+                        pass
+            self.friends.reverse()
+        return self._friends
+

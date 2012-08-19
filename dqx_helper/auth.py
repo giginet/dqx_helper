@@ -18,7 +18,6 @@ class AuthException(Exception): pass
 class Auth(object):
     LOGIN_PAGE = r'%s/sc/login' % dqx_helper.BASE_URL
     SEARCH_PAGE = r'%s/sc/search' % dqx_helper.BASE_URL
-    BAZAAR_PAGE = r'%s/sc/search/bazaar/%s/page/%d'
 
     def __init__(self, username=None, passwd=None):
         self.browser = mechanize.Browser()
