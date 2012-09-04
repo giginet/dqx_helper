@@ -29,7 +29,7 @@ class Bazaar(object):
     def __init__(self, auth):
         self.auth = auth
         
-    def search_item(self, q=''):
+    def search_items(self, q=''):
         products = []
         r = self.auth.browser.open("%s/%s/item" % (self.SEARCH_PAGE, urllib.quote(q)))
         soup = BeautifulSoup(r.read())

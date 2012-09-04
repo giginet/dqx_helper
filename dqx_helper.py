@@ -26,7 +26,7 @@ if __name__ == '__main__':
             print u"%sの検索結果" % q
             a = Auth(setting['sqex_id'], setting['passwd'])
             b = Bazaar(a)
-            products = b.search_item(product)
+            products = b.search_items(product)
             for product in products[:100]:
                 print u"%dG %d個 総額%dG @%s" % (product.price, product.quantity, product.total, product.place)
             print u"%d品中" % len(products)
