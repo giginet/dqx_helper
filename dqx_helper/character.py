@@ -136,7 +136,7 @@ class Character(CharacterListMixin):
 
     def get_photos(self):
         if not self.is_auth():
-            raise PermissionException("you cannot execute get_photo without logged in.")
+            raise PermissionException("you cannot execute get_photos without logged in.")
         photos = []
         soup = self._get_soup(self.PHOTO_INDEX_URL % (dqx_helper.BASE_URL, self.cid, 0))
         max_page = re.compile('[0-9]+').search(soup.find('div', {'class' : 'searchResult'}).contents[0].string).group(0)
@@ -186,7 +186,9 @@ class Character(CharacterListMixin):
 
     def get_friends(self):
         # fetch from friendlist
-        if not self._friends and self.is_auth():
+        if not self.is_auth():
+            raise PermissionException("you cannot execute get_friends without logged in.")
+        if not self._friends:
             self._friends = []
             soup = self._get_soup(self.FRIEND_INDEX_URL % (dqx_helper.BASE_URL, self.cid, 0))
             max_page = re.compile('[0-9]+').search(soup.find('div', {'class' : 'searchResult'}).string).group(0)
