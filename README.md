@@ -14,7 +14,7 @@
 主な使い方
 -----------------------
 
-``` python
+```python
 from dqx_helper import *
 
 a = Auth('sqex_id', 'passwword') # ログインする
@@ -25,15 +25,14 @@ b = Bazaar(a)
 items = b.search_items(u'やくそう') # バザーからやくそうの検索結果を取り出す
 print min(items, key=lambda item: item.price) # 最安の出品を取り出す
 ```
-  
+
 
 
 起動例
 --------------------
-python dqx_helper.py bazaar アモールの水
+```python dqx_helper.py bazaar アモールの水```
 
-::
-  
+```
   アモールの水の検索結果
   55G 10個 総額550G @プクランド大陸
   55G 10個 総額550G @プクランド大陸
@@ -45,7 +44,7 @@ python dqx_helper.py bazaar アモールの水
   85G 10個 総額850G @ウェナ諸島
   85G 10個 総額850G @ウェナ諸島
   85G 10個 総額850G @ウェナ諸島169品中
-
+```
 
 注意事項
 ------------------------------
