@@ -20,7 +20,10 @@ class Product(object):
         self.total = self.price * self.quantity
 
     def __unicode__(self):
-        return u"%(name)s(%(id)s)@%(place)s" % {'name':self.name, 'id':self.item_id, 'place':self.place}
+        return u'%(name)s(%(id)s)@%(place)s' % {'name':self.name, 'id':self.item_id, 'place':self.place}
+
+    def __str__(self):
+        return self.__unicode__().encode('utf-8')
 
 class Bazaar(object):
     SEARCH_PAGE = r'%s/sc/search' % dqx_helper.BASE_URL

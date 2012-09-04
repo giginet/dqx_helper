@@ -31,7 +31,7 @@ class CharacterListMixin(object):
             except PermissionException:
                 print "%s is not public." % name
                 member = Character(cid, self.auth, name, fetch=False)
-                self.members.append(member)
+                members.append(member)
             except NotFoundException:
                 pass
         return members
@@ -62,7 +62,13 @@ class Character(CharacterListMixin):
         if fetch: self.fetch()
 
     def __unicode__(self):
-        return self.name
+        return u"%s[%s](%s %s %s) Lv.%d" % (self.name, self.character_id, self.job, self.species, self.sex, self.level)
+
+    def __str__(self):
+        return self.__unicode__().encode('utf-8')
+
+    def __eq__(self, other):
+        return type(other) == type(self) and other.cid == self.cid
 
     def fetch(self):
         # fetch from home
@@ -98,7 +104,7 @@ class Character(CharacterListMixin):
         team = soup.find('div', id='myTeamStatusList')
         self._team_id = None
         if team:
-            self._team_id = re.compile('[0-9]+').search(dict(team.find('a').attrs)['href']).group(0)
+            self._team_id = int(re.compile('[0-9]+').search(dict(team.find('a').attrs)['href']).group(0))
 
         support_comment = soup.find(id="welcomeFriend").find('dd')
         self.is_support = support_comment is not None
@@ -140,9 +146,9 @@ class Character(CharacterListMixin):
             for photo in table:
                 info = dict(photo.find('a', {'class' : 'showLargePict'}).attrs)
                 comment = info.get('title', '')
-                date, place = photo.find('p', {'class' : 'thumbLocationAndDate'}).contents[::2]
+                date, location = photo.find('p', {'class' : 'thumbLocationAndDate'}).contents[::2]
                 photo_id = int(re.compile(r'[0-9]+').findall(info['rel'])[-1])
-                p = Photo(photo_id, self, comment=comment, created_at=date, place=place)
+                p = Photo(photo_id, self, comment=comment, created_at=date, location=location)
                 photos.append(p)
         return photos
 

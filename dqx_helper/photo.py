@@ -15,10 +15,16 @@ class Photo(object):
     def __init__(self, photo_id, author, **kwargs):
         self.photo_id = photo_id
         self.author = author
-        self.place = kwargs.get('place', '')
+        self.location = kwargs.get('location', '')
         self.created_at = parser(kwargs.get('created_at'))
-        self.comment = kwargs.get('comment')
+        self.comment = kwargs.get('comment', '')
         self.url = self.PHOTO_URL % (self.author.cid, self.photo_id)
+
+    def __unicode__(self):
+        return u"%d %s %s" % (self.photo_id, self.location, self.comment, self.created_at.strftime('%Y/%m/%d %H:%M:%S'))
+
+    def __str__(self):
+        return self.__unicode__().encode('utf-8')
 
     def save(self, path=os.getcwd()):
         if not self.author.is_auth: return

@@ -22,6 +22,12 @@ class Team(CharacterListMixin):
         self._members = None
         self.fetch()
 
+    def __unicode__(self):
+        return self.name
+
+    def __str__(self):
+        return self.__unicode__().encode('utf-8')
+
     def fetch(self):
         page = self.auth.browser.open(self.TEAM_PAGE % (dqx_helper.BASE_URL, self.team_id))
         soup = BeautifulSoup(page.read())
