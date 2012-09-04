@@ -5,7 +5,7 @@
 #
 import os
 import cStringIO
-from dateutil.parser import parser
+from dateutil.parser import parse
 from PIL import Image
 
 class Photo(object):
@@ -16,7 +16,7 @@ class Photo(object):
         self.photo_id = photo_id
         self.author = author
         self.location = kwargs.get('location', '')
-        self.created_at = parser(kwargs.get('created_at'))
+        self.created_at = parse(kwargs.get('created_at'))
         self.comment = kwargs.get('comment', '')
         self.url = self.PHOTO_URL % (self.author.cid, self.photo_id)
 

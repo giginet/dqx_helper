@@ -5,9 +5,9 @@
 #
 
 import re
+import math
 import urllib2
 import datetime
-import itertools
 import cStringIO
 from PIL import Image
 from BeautifulSoup import BeautifulSoup
@@ -138,7 +138,9 @@ class Character(CharacterListMixin):
         if not self.is_auth():
             raise PermissionException("you cannot execute get_photo without logged in.")
         photos = []
-        for page in itertools.count():
+        soup = self._get_soup(self.PHOTO_INDEX_URL % (dqx_helper.BASE_URL, self.cid, 0))
+        max_page = re.compile('[0-9]+').search(soup.find('div', {'class' : 'searchResult'}).contents[0].string).group(0)
+        for page in range(int(math.ceil(int(max_page) / 9))):
             print "Fetching page %d..." % page
             soup = self._get_soup(self.PHOTO_INDEX_URL % (dqx_helper.BASE_URL, self.cid, page))
             table = soup.findAll('td', {'class' : 'contentsTable1TD1'})
@@ -148,7 +150,7 @@ class Character(CharacterListMixin):
                 comment = info.get('title', '')
                 date, location = photo.find('p', {'class' : 'thumbLocationAndDate'}).contents[::2]
                 photo_id = int(re.compile(r'[0-9]+').findall(info['rel'])[-1])
-                p = Photo(photo_id, self, comment=comment, created_at=date, location=location)
+                p = Photo(photo_id, self, comment=comment, created_at=str(date.string), location=str(location.string))
                 photos.append(p)
         return photos
 
@@ -186,8 +188,11 @@ class Character(CharacterListMixin):
         # fetch from friendlist
         if not self._friends and self.is_auth():
             self._friends = []
-            for page in itertools.count():
-                friends = self._get_characters(self._get_soup(self.FRIEND_INDEX_URL % (dqx_helper.BASE_URL, self.cid, page)), 'friendlistTableTd')
+            soup = self._get_soup(self.FRIEND_INDEX_URL % (dqx_helper.BASE_URL, self.cid, 0))
+            max_page = re.compile('[0-9]+').search(soup.find('div', {'class' : 'searchResult'}).string).group(0)
+            for page in range(int(math.ceil(int(max_page) / 10.0))):
+                soup = self._get_soup(self.FRIEND_INDEX_URL % (dqx_helper.BASE_URL, self.cid, page))
+                friends = self._get_characters(soup, 'friendlistTableTd')
                 if len(friends) == 0: break
                 self._friends += friends
         return self._friends

@@ -4,7 +4,7 @@
 # created by giginet on 2012/09/04
 #
 import re
-import itertools
+import math
 import cStringIO
 from PIL import Image
 from BeautifulSoup import BeautifulSoup
@@ -61,7 +61,10 @@ class Team(CharacterListMixin):
         if not self._members:
             self._members = []
             prev = None
-            for page in itertools.count():
+            page = self.auth.browser.open(self.TEAM_MEMBERLIST_PAGE % (dqx_helper.BASE_URL, self.team_id, 0))
+            soup = BeautifulSoup(page.read())
+            max_page = re.compile('[0-9]+').search(soup.find('div', {'class' : 'searchResult'}).string).group(0)
+            for page in range(int(math.ceil(int(max_page) / 10.0))):
                 page = self.auth.browser.open(self.TEAM_MEMBERLIST_PAGE % (dqx_helper.BASE_URL, self.team_id, page))
                 soup = BeautifulSoup(page.read())
                 members = self._get_characters(soup, 'memberlistTableTd')
