@@ -62,11 +62,15 @@ class Character(object):
         equip_index = 1 if self.is_mychara() else 0 # マイキャラと他のキャラでは挙動が違う
         self.equipments = dict([(key.contents[0].string, None if value.contents[equip_index].string.strip() == u"そうびなし" else value.contents[equip_index].string.strip()) for key, value in zip(equipment_table.findAll('th'), equipment_table.findAll('td'))])
         slist = map(lambda tag: tag.string.replace(u'：', '').replace(u'&nbsp;', ''), soup.find('div', id='myCharacterStatusList').findAll('dd'))
-        self.character_id, self.species, self.sex, self.job, self.level = slist[:5]
+        self.character_id, kind, self.job, self.level = slist[:4]
+        self.species = kind[:-1]
+        self.sex = kind[-1]
         self.level = int(self.level)
-        self.charge = None
+        self.money, self.next_exp, self.charge = (None,) * 3
         if self.is_mychara():
-            self.charge = int(slist[5].replace(u'時間', ''))
+            self.next_exp = int(slist[4][:-1])
+            self.money = int(slist[5][:-1])
+            self.charge = int(slist[6][:-2])
 
         support_comment = soup.find(id="welcomeFriend").find('dd')
         self.is_support = support_comment is not None
@@ -133,7 +137,7 @@ class Character(object):
             return BeautifulSoup(page)
 
     def is_mychara(self):
-        return self.is_auth() and self.auth.cid == self.cid
+        return self.is_auth() and self.cid in self.auth.cids
 
     def is_auth(self):
         return not self.auth is None

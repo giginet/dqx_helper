@@ -19,7 +19,7 @@ class Auth(object):
     LOGIN_PAGE = r'%s/sc/login' % dqx_helper.BASE_URL
     SEARCH_PAGE = r'%s/sc/search' % dqx_helper.BASE_URL
 
-    def __init__(self, username=None, passwd=None):
+    def __init__(self, username=None, passwd=None, chara_index=0):
         self.browser = mechanize.Browser()
         cj = cookielib.LWPCookieJar()
         self.browser.set_cookiejar(cj)
@@ -31,10 +31,10 @@ class Auth(object):
             sys.stdout.write('Username: ')
             username = raw_input()
             passwd = getpass()
-        self.login(username, passwd)
-        self._character = None
+        self.login(username, passwd, chara_index)
+        self._characters = None
         
-    def login(self, username, passwd):
+    def login(self, username, passwd, chara_index=0):
         browser = self.browser 
         browser.open(self.LOGIN_PAGE)
 
@@ -52,17 +52,19 @@ class Auth(object):
             raise AuthException('Username or Password may be invalid.')
         r = browser.open(self.SEARCH_PAGE)
         soup = BeautifulSoup(r)
-        rel = dict(soup.findAll('a', {'class':re.compile('charselect')})[0].attrs)['rel']
-        if not rel:
+        rels = [dict(char.attrs)['rel'] for char in soup.findAll('a', {'class':re.compile('charselect')})]
+        if len(rels) == 0:
             raise AuthException("Exception raised for errors in authenticate to DQX portal.")
+        elif len(rels) <= chara_index:
+            raise AuthException("chara_index %d is not found.", chara_index)
         browser.select_form(name='loginActionForm')
         for f in browser.form.controls: f.readonly = False
-        self.cid = int(rel)
-        browser.form['cid'] = str(self.cid)
+        self.cids = map(lambda rel: int(rel), rels)
+        browser.form['cid'] = str(self.cids[chara_index])
         browser.submit()
 
     @property
-    def character(self):
-        if not self._character:
-            self._character = Character(self.cid, self)
-        return self._character
+    def characters(self):
+        if not self._characters:
+            self._characters = [Character(cid, self) for cid in self.cids]
+        return self._characters
