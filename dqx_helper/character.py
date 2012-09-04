@@ -17,7 +17,26 @@ from dqx_helper.photo import Photo
 class PermissionException(Exception): pass
 class NotFoundException(Exception): pass
 
-class Character(object):
+class CharacterListMixin(object):
+    def _get_characters(self, soup, table_class):
+        members = []
+        member_tables = soup.findAll('tr', {'class' : table_class})
+        for tr in member_tables:
+            link = tr.findAll('td')[0].find('a')
+            cid = re.compile('[0-9]+').search(dict(link.attrs)['href']).group(0)
+            name = link.string
+            try:
+                member = Character(cid, self.auth, name)
+                members.append(member)
+            except PermissionException:
+                print "%s is not public." % name
+                member = Character(cid, self.auth, name, fetch=False)
+                self.members.append(member)
+            except NotFoundException:
+                pass
+        return members
+
+class Character(CharacterListMixin):
     CID_PATTERN = r'(?P<cid>[0-9]+)'
     CHARACTER_URL = r'%s/sc/character/%d/'
     CHARACTER_STATUS_URL = r'%s/sc/character/%d/status/'
@@ -39,6 +58,7 @@ class Character(object):
             self.name = name
         self._friends = None
         self.updated_at = None
+        self._team = None
         if fetch: self.fetch()
 
     def __unicode__(self):
@@ -62,15 +82,23 @@ class Character(object):
         equip_index = 1 if self.is_mychara() else 0 # マイキャラと他のキャラでは挙動が違う
         self.equipments = dict([(key.contents[0].string, None if value.contents[equip_index].string.strip() == u"そうびなし" else value.contents[equip_index].string.strip()) for key, value in zip(equipment_table.findAll('th'), equipment_table.findAll('td'))])
         slist = map(lambda tag: tag.string.replace(u'：', '').replace(u'&nbsp;', ''), soup.find('div', id='myCharacterStatusList').findAll('dd'))
-        self.character_id, kind, self.job, self.level = slist[:4]
-        self.species = kind[:-1]
-        self.sex = kind[-1]
+        if self.is_mychara():
+            self.character_id, kind, self.job, self.level = slist[:4]
+            self.species = kind[:-1]
+            self.sex = kind[-1]
+        else:
+            self.character_id, self.species, self.sex, self.job, self.level = slist[:5]
         self.level = int(self.level)
         self.money, self.next_exp, self.charge = (None,) * 3
         if self.is_mychara():
             self.next_exp = int(slist[4][:-1])
             self.money = int(slist[5][:-1])
             self.charge = int(slist[6][:-2])
+
+        team = soup.find('div', id='myTeamStatusList')
+        self._team_id = None
+        if team:
+            self._team_id = re.compile('[0-9]+').search(dict(team.find('a').attrs)['href']).group(0)
 
         support_comment = soup.find(id="welcomeFriend").find('dd')
         self.is_support = support_comment is not None
@@ -150,30 +178,23 @@ class Character(object):
 
     def get_friends(self):
         # fetch from friendlist
-        self._friends = []
-        if self.is_auth():
+        if not self._friends and self.is_auth():
+            self._friends = []
             for page in itertools.count():
-                soup = self._get_soup(self.FRIEND_INDEX_URL % (dqx_helper.BASE_URL, self.cid, page))
-                friend_tables = soup.findAll('tr', {'class' : 'friendlistTableTd'})
-                if len(friend_tables) == 0: break
-                for tr in friend_tables:
-                    link = tr.findAll('td')[0].find('a')
-                    cid = re.compile('[0-9]+').search(dict(link.attrs)['href']).group(0)
-                    name = link.string
-                    try:
-                        friend = Character(cid, self.auth, name)
-                        self._friends.append(friend)
-                    except PermissionException:
-                        print "%s is not public." % name
-                        friend = Character(cid, self.auth, name, fetch=False)
-                        self._friends.append(friend)
-                    except NotFoundException:
-                        pass
-            self.friends.reverse()
+                friends = self._get_characters(self._get_soup(self.FRIEND_INDEX_URL % (dqx_helper.BASE_URL, self.cid, page)), 'friendlistTableTd')
+                if len(friends) == 0: break
+                self._friends += friends
         return self._friends
-
+        
     def get_faceicon(self):
         l = len(str(self.cid))
         url = self.FACEICON_URL % (dqx_helper.BASE_URL, str(self.cid)[:l - 9], str(self.cid)[:l - 8], str(self.cid)[:l - 7], str(self.cid)[:l - 6], self.cid)
         page = urllib2.urlopen(url)
         return Image.open(cStringIO.StringIO(page.read()))
+
+    @property
+    def team(self):
+        if not self._team:
+            from dqx_helper.team import Team
+            self._team = Team(self._team_id, self.auth)
+        return self._team
