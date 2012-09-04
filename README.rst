@@ -1,20 +1,36 @@
-ドラゴンクエスト10 旅人のバザー検索スクリプト
+ドラゴンクエスト10 ツール
 ================================================
 
-バザーの最安値を調べるのが面倒だったので作った。
+「ドラゴンクエストX 目覚めし冒険者の広場」をスクレイピングして情報を取得するライブラリです。
 
-負荷がかかるので乱用禁止
+ユーザー情報の取得、写真の取得、バザー情報の取得などに対応しています。
 
-使い方
+
+導入方法
 ------------------------
-1. sh util/setup.shを走らせる
+1. python setup.py install
 2. setting.yaml.sampleをsetting.yamlにリネームして、スクウェア・エニックスのID、パスワードを記述する
-3. python bazaar.py アイテム名といった感じで起動する
+
+主な使い方
+-----------------------
+
+``` python
+from dqx_helper import *
+
+a = Auth('sqex_id', 'passwword') # ログインする
+c = a.characters[0] # 一番目のキャラクターを取り出す
+print a.name # キャラ名を取り出す
+friend = a.friends # フレンドを取り出す
+b = Bazaar(a)
+items = b.search_items(u'やくそう') # バザーからやくそうの検索結果を取り出す
+print min(items, key=lambda item: item.price) # 最安の出品を取り出す
+```
+  
 
 
 起動例
 --------------------
-python bazaar.py アモールの水
+python dqx_helper.py bazaar アモールの水
 
 ::
   
