@@ -13,5 +13,5 @@ setup(name='dqx_helper',
       author='giginet',
       author_email='giginet.net@gmail.com',
       url='http://github.com/giginet/dqx_helper',
-      packages=('pyyaml', 'mechanize', 'BeautifulSoup', 'PIL'),
+      packages=('nose', 'pyyaml', 'mechanize', 'BeautifulSoup', 'PIL'),
 )
