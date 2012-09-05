@@ -106,7 +106,10 @@ class Character(CharacterListMixin):
         if team:
             self._team_id = int(re.compile('[0-9]+').search(dict(team.find('a').attrs)['href']).group(0))
 
-        support_comment = soup.find(id="welcomeFriend").find('dd')
+        welcome = soup.find(id="welcomeFriend")
+        support_comment = None
+        if welcome:
+            support_comment = welcome.find('dd')
         self.is_support = support_comment is not None
         self.support_info = {}
         if self.is_support:
