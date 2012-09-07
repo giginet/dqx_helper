@@ -133,8 +133,7 @@ class Character(CharacterListMixin):
         if tds[0].contents[0].string.strip() == '---':
             self.spells = []
         else:
-            spell_index = 1 if self.is_auth() else 0
-            self.spells = [td.contents[spell_index].string.strip() for td in spell_table.findAll('td')]
+            self.spells = [td.contents[0].string.strip() for td in spell_table.findAll('td')]
         self.updated_at = datetime.datetime.today()
 
     def get_photos(self):
